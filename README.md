@@ -1,0 +1,1 @@
+Creates a docker container that can be used to build rust lambdas. Largely borrowed from https://github.com/srijs/rust-aws-lambda/blob/master/docker/dockerfile
