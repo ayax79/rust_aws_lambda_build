@@ -9,8 +9,8 @@ ENV BUILD_DIR=/build \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
     PREFIX=/musl \
-    MUSL_VERSION=1.1.19 \
-    OPENSSL_VERSION=1.1.0i
+    MUSL_VERSION=1.1.20 \
+    OPENSSL_VERSION=1.1.0j
 
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y
@@ -25,8 +25,13 @@ WORKDIR $PREFIX
 
 # Build any dependencies that aren't part of your build, e.g. thrift compiler
 
+ADD keys.gpg .
+RUN gpg --import keys.gpg
+
 # Build Musl
-ADD http://www.musl-libc.org/releases/musl-$MUSL_VERSION.tar.gz .
+ADD https://www.musl-libc.org/releases/musl-$MUSL_VERSION.tar.gz .
+ADD https://www.musl-libc.org/releases/musl-$MUSL_VERSION.tar.gz.asc .
+RUN [[ "`gpg --verify musl-$MUSL_VERSION.tar.gz.asc musl-$MUSL_VERSION.tar.gz 2>&1`" == *"Good signature from"*"musl libc <musl@libc.org>"* ]]
 RUN tar -xvzf musl-$MUSL_VERSION.tar.gz \
     && cd musl-$MUSL_VERSION \
     && ./configure --prefix=$PREFIX \
@@ -41,7 +46,8 @@ ENV CC=$PREFIX/bin/musl-gcc \
 
 # Build OpenSSL
 ADD https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz .
-
+ADD https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz.asc .
+RUN [[ "`gpg --verify openssl-$OPENSSL_VERSION.tar.gz.asc openssl-$OPENSSL_VERSION.tar.gz 2>&1`" == *"Good signature from"*"Matt Caswell <matt@openssl.org>"* ]]
 RUN echo "Building OpenSSL" \
     && tar -xzf "openssl-$OPENSSL_VERSION.tar.gz" \
     && cd openssl-$OPENSSL_VERSION \
